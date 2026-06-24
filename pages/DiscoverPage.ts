@@ -165,11 +165,16 @@ export class DiscoverPage extends BasePage {
 
         const tileText = await tile.innerText();
 
+        console.log('===== TILE TEXT =====');
+        console.log(tileText);
+        console.log('=====================');
+
         const tileTitle = tileText
             .split('\n')
             .map(text => text.trim())
             .find(text => text.startsWith('Story -')) || '';
 
+        console.log('Captured tile title:', tileTitle);
         console.log('✅ Selected Discover tile:', tileTitle);
         await expect(addToDashboardButton).toBeVisible({ timeout: 30000 });
         await addToDashboardButton.click();

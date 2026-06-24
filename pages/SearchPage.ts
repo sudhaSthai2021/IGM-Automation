@@ -298,126 +298,126 @@ export class SearchPage extends BasePage {
 
         console.log(`✅ Saved search tile found on Dashboard: ${savedSearchName}`);
     }
-async createAlertFromDashboardTile(
-    tileTitle: string,
-    alertType: string,
-    destinations: string[]
-): Promise<AlertExpectedData> {
+    async createAlertFromDashboardTile(
+        tileTitle: string,
+        alertType: string,
+        destinations: string[]
+    ): Promise<AlertExpectedData> {
 
-    console.log(`Looking for dashboard tile: ${tileTitle}`);
+        console.log(`Looking for dashboard tile: ${tileTitle}`);
 
-    let tile: Locator;
+        let tile: Locator;
 
-    // Story tiles
-    if (tileTitle.startsWith('Story -')) {
+        // Story tiles
+        if (tileTitle.startsWith('Story -')) {
 
-        tile = this.page
-            .locator('[data-testid*="dashboard-widget"]')
-            .filter({
-                hasText: new RegExp(
-                    `^${this.escapeRegExp(tileTitle)}`,
-                    'i'
-                )
-            })
-            .first();
+            tile = this.page
+                .locator('[data-testid*="dashboard-widget"]')
+                .filter({
+                    hasText: new RegExp(
+                        `^${this.escapeRegExp(tileTitle)}`,
+                        'i'
+                    )
+                })
+                .first();
 
-    } else {
+        } else {
 
-        // Saved Search tiles appear as "All - <saved search name>"
-        tile = this.page
-            .locator('[data-testid*="dashboard-widget"]')
-            .filter({
-                hasText: new RegExp(
-                    `^All\\s*-\\s*${this.escapeRegExp(tileTitle)}`,
-                    'im'
-                )
-            })
-            .first();
-    }
+            // Saved Search tiles appear as "All - <saved search name>"
+            tile = this.page
+                .locator('[data-testid*="dashboard-widget"]')
+                .filter({
+                    hasText: new RegExp(
+                        `^All\\s*-\\s*${this.escapeRegExp(tileTitle)}`,
+                        'im'
+                    )
+                })
+                .first();
+        }
 
-    await expect(tile).toBeVisible({ timeout: 20000 });
+        await expect(tile).toBeVisible({ timeout: 20000 });
 
-    console.log('===== TILE FOUND =====');
+        console.log('===== TILE FOUND =====');
 
-    const tileText = await tile.innerText();
+        const tileText = await tile.innerText();
 
-    console.log(tileText);
-    console.log('======================');
+        console.log(tileText);
+        console.log('======================');
 
-    const allButtons = tile.locator('button');
+        const allButtons = tile.locator('button');
 
-    console.log('Total buttons in tile:', await allButtons.count());
+        console.log('Total buttons in tile:', await allButtons.count());
 
-    for (let i = 0; i < await allButtons.count(); i++) {
-        console.log(
-            `Button ${i}:`,
-            {
-                ariaLabel: await allButtons.nth(i).getAttribute('aria-label'),
-                testId: await allButtons.nth(i).getAttribute('data-testid'),
-                text: await allButtons.nth(i).textContent()
-            }
+        for (let i = 0; i < await allButtons.count(); i++) {
+            console.log(
+                `Button ${i}:`,
+                {
+                    ariaLabel: await allButtons.nth(i).getAttribute('aria-label'),
+                    testId: await allButtons.nth(i).getAttribute('data-testid'),
+                    text: await allButtons.nth(i).textContent()
+                }
+            );
+        }
+
+        const alertButtons = tile.locator(
+            'button[aria-label="Alert"], button[aria-label="Add alert"], button[data-testid*="create-alert"], button[data-testid*="alert"]'
         );
-    }
 
-    const alertButtons = tile.locator(
-        'button[aria-label="Alert"], button[aria-label="Add alert"], button[data-testid*="create-alert"], button[data-testid*="alert"]'
-    );
-
-    console.log(
-        'Matching alert buttons:',
-        await alertButtons.count()
-    );
-
-    for (let i = 0; i < await alertButtons.count(); i++) {
         console.log(
-            `Alert Button ${i}:`,
-            {
-                ariaLabel: await alertButtons.nth(i).getAttribute('aria-label'),
-                testId: await alertButtons.nth(i).getAttribute('data-testid'),
-                text: await alertButtons.nth(i).textContent()
-            }
+            'Matching alert buttons:',
+            await alertButtons.count()
         );
+
+        for (let i = 0; i < await alertButtons.count(); i++) {
+            console.log(
+                `Alert Button ${i}:`,
+                {
+                    ariaLabel: await alertButtons.nth(i).getAttribute('aria-label'),
+                    testId: await alertButtons.nth(i).getAttribute('data-testid'),
+                    text: await alertButtons.nth(i).textContent()
+                }
+            );
+        }
+
+        const alertButton = alertButtons.first();
+
+        await expect(alertButton).toBeVisible({ timeout: 15000 });
+
+        console.log('===== CLICKING ALERT BUTTON =====');
+        console.log(
+            'aria-label:',
+            await alertButton.getAttribute('aria-label')
+        );
+        console.log(
+            'data-testid:',
+            await alertButton.getAttribute('data-testid')
+        );
+        console.log('=================================');
+
+        await alertButton.click();
+
+        await this.completeAlertModal(alertType);
+
+        const expectedData: AlertExpectedData = {
+            destinations: destinations.map(value => value.toUpperCase()),
+            alertType,
+            timeZone: 'Etc/UTC',
+            emailRange:
+                alertType.toLowerCase() === 'instant'
+                    ? 'All Day'
+                    : '05:00 - 12:00'
+        };
+
+        console.log(
+            `✅ ${alertType} alert created for dashboard tile: ${tileTitle}`
+        );
+        console.log(
+            'Expected dashboard alert data:',
+            JSON.stringify(expectedData, null, 2)
+        );
+
+        return expectedData;
     }
-
-    const alertButton = alertButtons.first();
-
-    await expect(alertButton).toBeVisible({ timeout: 15000 });
-
-    console.log('===== CLICKING ALERT BUTTON =====');
-    console.log(
-        'aria-label:',
-        await alertButton.getAttribute('aria-label')
-    );
-    console.log(
-        'data-testid:',
-        await alertButton.getAttribute('data-testid')
-    );
-    console.log('=================================');
-
-    await alertButton.click();
-
-    await this.completeAlertModal(alertType);
-
-    const expectedData: AlertExpectedData = {
-        destinations: destinations.map(value => value.toUpperCase()),
-        alertType,
-        timeZone: 'Etc/UTC',
-        emailRange:
-            alertType.toLowerCase() === 'instant'
-                ? 'All Day'
-                : '05:00 - 12:00'
-    };
-
-    console.log(
-        `✅ ${alertType} alert created for dashboard tile: ${tileTitle}`
-    );
-    console.log(
-        'Expected dashboard alert data:',
-        JSON.stringify(expectedData, null, 2)
-    );
-
-    return expectedData;
-}
     async verifyAlertInEmailAlerts(alertName: string): Promise<void> {
         await this.emailAlertsLink.click();
 
@@ -479,12 +479,29 @@ async createAlertFromDashboardTile(
         );
     }
     async captureRandomWordFromAnyStoryTitle(): Promise<string> {
+
+    // Wait for search results/network activity to finish
+    await this.page.waitForLoadState('networkidle');
+
+    // Ensure at least one result row is visible
+    await expect(this.resultRows.first()).toBeVisible({ timeout: 20000 });
+
+    // Ensure the first row has text content
+    await expect(this.resultRows.first()).not.toHaveText('', {
+        timeout: 10000
+    });
+
     const count = await this.resultRows.count();
+
+    console.log(`Result row count: ${count}`);
 
     const words: string[] = [];
 
     for (let i = 0; i < count; i++) {
-        const rowText = await this.resultRows.nth(i).innerText();
+
+        const rowText = (await this.resultRows.nth(i).innerText()).trim();
+
+        console.log(`Row ${i + 1}: ${rowText}`);
 
         const rowWords = rowText
             .replace(/[^a-zA-Z0-9 ]/g, ' ')
@@ -497,6 +514,8 @@ async createAlertFromDashboardTile(
 
         words.push(...rowWords);
     }
+
+    console.log(`Total candidate words found: ${words.length}`);
 
     if (words.length === 0) {
         throw new Error('❌ Could not capture random word from story results');

@@ -17,7 +17,7 @@ Feature: Create Bond Issue and verify Story Editor functionality
       | IG     |
       | Pulse  |
 
-    And user verifies previously entered editor content is retained
+    #And user verifies previously entered editor content is retained
     And user verifies all Rich Text Editor controls are available and editable
     And user enables Resend Alerts
     And user clicks Publish

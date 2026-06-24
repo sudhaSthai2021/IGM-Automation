@@ -191,7 +191,7 @@ export class StoryEditorPage extends BasePage {
         await expect(this.bodyEditor).toBeVisible({ timeout: 15000 });
 
         await this.bodyEditor.click();
-        await this.bodyEditor.press('Control+A');
+        await this.selectAllInEditor();
         await this.bodyEditor.fill(text);
     }
     /*
@@ -305,6 +305,9 @@ export class StoryEditorPage extends BasePage {
 
     async verifyAllRichTextEditorControls(): Promise<void> {
 
+        await this.resetEditor();
+        await this.moveToNewParagraph();
+
         console.log('START: Toolbar');
         await this.verifyToolbarButtonsVisibleAndEnabled();
         console.log('DONE: Toolbar');
@@ -380,8 +383,8 @@ export class StoryEditorPage extends BasePage {
         await this.resetEditor();
         console.log('EDITABLE: BOLD');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+
+        await this.goToEndAndTypeNewLine();
 
         console.log(
             'BOLD DISABLED BEFORE CLICK:',
@@ -431,8 +434,8 @@ export class StoryEditorPage extends BasePage {
 
         console.log('EDITABLE: ITALIC');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+
+        await this.goToEndAndTypeNewLine();
 
         await this.page.waitForTimeout(500);
 
@@ -496,8 +499,7 @@ export class StoryEditorPage extends BasePage {
 
         console.log('EDITABLE: STRIKE');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+        await this.goToEndAndTypeNewLine();
 
         console.log(
             'STRIKE DISABLED BEFORE CLICK:',
@@ -509,8 +511,7 @@ export class StoryEditorPage extends BasePage {
 
         console.log('EDITABLE: BULLET');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+        await this.goToEndAndTypeNewLine();
 
         await this.bulletListButton.click();
         await this.bodyEditor.pressSequentially('Bullet Edit Test');
@@ -518,8 +519,7 @@ export class StoryEditorPage extends BasePage {
 
         console.log('EDITABLE: NUMBER');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+        await this.goToEndAndTypeNewLine();
 
         await this.numberedListButton.click();
         await this.bodyEditor.pressSequentially('Number Edit Test');
@@ -527,21 +527,22 @@ export class StoryEditorPage extends BasePage {
 
         console.log('EDITABLE: ALIGN LEFT');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+
+        await this.goToEndAndTypeNewLine();
 
         await this.bodyEditor.pressSequentially('Left Align Edit Test');
-        await this.bodyEditor.press('Control+A');
+        await this.selectAllInEditor();
+        await this.alignCenterButton.click();
         await this.alignLeftButton.click();
 
         console.log('EDITABLE: ALIGN CENTER');
 
         console.log('CENTER BEFORE FOCUS');
-        await this.focusEditor();
+
         console.log('CENTER AFTER FOCUS');
 
         console.log('CENTER BEFORE MOVE');
-        await this.moveToEditableTextArea();
+        await this.goToEndAndTypeNewLine();
         console.log('CENTER AFTER MOVE');
 
         console.log('CENTER BEFORE TYPE');
@@ -587,8 +588,7 @@ export class StoryEditorPage extends BasePage {
         );
         console.log('EDITABLE: ALIGN RIGHT');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+        await this.goToEndAndTypeNewLine();
 
         console.log(
             'HTML BEFORE RIGHT TYPE:',
@@ -627,8 +627,8 @@ export class StoryEditorPage extends BasePage {
         );
         console.log('EDITABLE: JUSTIFY');
 
-        await this.focusEditor();
-        await this.moveToEditableTextArea();
+
+        await this.goToEndAndTypeNewLine();
         await this.bodyEditor.pressSequentially('Justify Edit Test');
         await this.bodyEditor.press('Control+A');
         await this.justifyButton.click();
@@ -656,27 +656,7 @@ export class StoryEditorPage extends BasePage {
 
         console.log('✅ Existing editor content remains editable after Create');
     }
-    async focusEditor(): Promise<void> {
 
-        console.log('FOCUS: start');
-
-        await this.bodyEditor.scrollIntoViewIfNeeded();
-
-        console.log('FOCUS: after scroll');
-
-        await this.bodyEditor.click();
-
-        console.log('FOCUS: after click');
-
-        await this.page.waitForTimeout(300);
-
-        console.log(
-            'FOCUS ACTIVE ELEMENT:',
-            await this.page.evaluate(() => document.activeElement?.outerHTML)
-        );
-
-        console.log('FOCUS: end');
-    }
     private async verifyToolbarButtonsVisibleAndEnabled(): Promise<void> {
         const buttons = [
             this.boldButton,
@@ -710,43 +690,12 @@ export class StoryEditorPage extends BasePage {
         await this.bodyEditor.press('Backspace');
     }
 
-    private async moveToEditorEnd(): Promise<void> {
-        console.log('MOVE: click start');
 
-        await this.bodyEditor.click({
-            force: true
-        });
-
-        console.log('MOVE: click done');
-
-        console.log('MOVE: before ctrl+end');
-
-        await this.bodyEditor.evaluate((editor) => {
-            const range = document.createRange();
-            const selection = window.getSelection();
-
-            range.selectNodeContents(editor);
-            range.collapse(false);
-
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        });
-
-        console.log('MOVE: after ctrl+end');
-
-        console.log('MOVE: ctrl+end done');
-
-        // Create a new line / paragraph
-        await this.page.keyboard.press('Enter');
-
-        await this.page.waitForTimeout(300);
-
-        console.log('MOVE: new line created');
-    }
 
     private async getBodyEditorHtml(): Promise<string> {
 
         await this.page.waitForTimeout(500);
+
 
         const html =
             await this.page
@@ -760,7 +709,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyBoldFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.boldButton).toBeVisible();
         await expect(this.boldButton).toBeEnabled();
@@ -776,7 +725,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyItalicFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.italicButton).toBeVisible();
         await expect(this.italicButton).toBeEnabled();
@@ -792,7 +741,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyStrikeThroughFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.strikeThroughButton).toBeVisible();
         await expect(this.strikeThroughButton).toBeEnabled();
@@ -808,7 +757,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyBulletListFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.bulletListButton).toBeVisible();
         await expect(this.bulletListButton).toBeEnabled();
@@ -824,7 +773,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyNumberedListFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.numberedListButton).toBeVisible();
         await expect(this.numberedListButton).toBeEnabled();
@@ -852,7 +801,7 @@ export class StoryEditorPage extends BasePage {
         await this.page.keyboard.press('ArrowRight');
     }
     private async verifyAlignLeftFunctionality(): Promise<void> {
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
         await this.bodyEditor.pressSequentially('Left Text');
         await this.bodyEditor.press('Control+A');
@@ -870,7 +819,7 @@ export class StoryEditorPage extends BasePage {
     private async verifyAlignCenterFunctionality(): Promise<void> {
         console.log('CENTER: start');
 
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
         console.log('CENTER: after move');
 
         await this.bodyEditor.pressSequentially('Center Text');
@@ -889,9 +838,9 @@ export class StoryEditorPage extends BasePage {
     private async verifyAlignRightFunctionality(): Promise<void> {
         console.log('RIGHT: before moveToEditorEnd');
 
-        await this.moveToNewParagraph();
+        await this.goToEndAndTypeNewLine();
 
-        await this.focusEditor();
+
 
         await this.bodyEditor.pressSequentially('Right Text');
 
@@ -918,7 +867,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     private async verifyJustifyFunctionality(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await this.bodyEditor.pressSequentially('Justify Text');
         await this.bodyEditor.press('Control+A');
@@ -980,7 +929,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     async verifyHyperlinkInsert(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await this.bodyEditor.click();
         await this.bodyEditor.pressSequentially('Link Test');
@@ -1005,7 +954,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     async verifyImageInsert(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await this.insertImageButton.click();
 
@@ -1019,7 +968,7 @@ export class StoryEditorPage extends BasePage {
         console.log('✅ Image insert popup opened successfully');
     }
     async verifyVideoInsert(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await this.insertVideoButton.click();
 
@@ -1044,7 +993,7 @@ export class StoryEditorPage extends BasePage {
     }
 
     async verifyTableInsert(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         // await this.bodyEditor.click();
 
@@ -1067,7 +1016,7 @@ export class StoryEditorPage extends BasePage {
         console.log('✅ Table inserted successfully');
     }
     async verifyFileUpload(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         console.log('🔥 NEW verifyFileUpload METHOD RUNNING');
 
@@ -1149,7 +1098,7 @@ export class StoryEditorPage extends BasePage {
         await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(500);
 
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await expect(this.horizontalLineButton).toBeVisible({ timeout: 10000 });
 
@@ -1175,7 +1124,7 @@ export class StoryEditorPage extends BasePage {
 
 
     async verifyImageUploadIsFailing(): Promise<void> {
-        await this.moveToEditorEnd();
+        await this.goToEndAndTypeNewLine();
 
         await this.insertImageButton.click();
 
@@ -1221,78 +1170,8 @@ export class StoryEditorPage extends BasePage {
         );
     }
 
-    private async moveToNewParagraph(): Promise<void> {
-        await this.bodyEditor.click({ force: true });
 
-        await this.page.keyboard.press('Control+End');
 
-        // Create new paragraph
-        await this.page.keyboard.press('Enter');
-
-        await this.page.waitForTimeout(300);
-    }
-    async moveToEditableTextArea(): Promise<void> {
-        const paragraphs = this.bodyEditor.locator('p');
-
-        const count = await paragraphs.count();
-
-        console.log('PARAGRAPH COUNT:', count);
-
-        for (let i = count - 1; i >= 0; i--) {
-            const paragraph = paragraphs.nth(i);
-
-            const html = await paragraph.evaluate(
-                el => el.outerHTML.toLowerCase()
-            );
-
-            // Skip video paragraphs
-            if (html.includes('fr-video')) {
-                continue;
-            }
-
-            // Skip image paragraphs
-            if (html.includes('fr-image')) {
-                continue;
-            }
-
-            // Skip empty paragraphs
-            const text =
-                (await paragraph.textContent())?.trim() ?? '';
-
-            if (!text) {
-                continue;
-            }
-
-            console.log(`Using paragraph ${i}`);
-            console.log('PARAGRAPH HTML:', html);
-
-            await paragraph.click();
-
-            await this.page.keyboard.press('End');
-            await this.page.keyboard.press('Enter');
-
-            break;
-        }
-
-        await this.page.waitForTimeout(500);
-
-        console.log(
-            'ACTIVE VIDEO COUNT:',
-            await this.bodyEditor.locator('.fr-video.fr-active').count()
-        );
-
-        console.log(
-            'BOLD DISABLED:',
-            await this.boldButton.getAttribute('aria-disabled')
-        );
-
-        console.log(
-            'ITALIC DISABLED:',
-            await this.italicButton.getAttribute('aria-disabled')
-        );
-        await this.page.keyboard.press('End');
-        await this.page.keyboard.press('Enter');
-    }
 
     async resetEditor(): Promise<void> {
         console.log("🧹 Resetting editor state");
@@ -1302,6 +1181,65 @@ export class StoryEditorPage extends BasePage {
         // Select all + delete EVERYTHING
         await this.page.keyboard.press('Control+A');
         await this.page.keyboard.press('Backspace');
+
+        await this.page.waitForTimeout(300);
+    }
+    private async goToEndAndTypeNewLine(): Promise<void> {
+        console.log('➡️ goToEndAndTypeNewLine: start');
+
+        await this.bodyEditor.click({ force: true });
+
+        // IMPORTANT: normalize selection first
+        await this.page.keyboard.press('Escape');
+
+        // safer than Ctrl+End in rich editors
+        await this.bodyEditor.evaluate((el) => {
+            const range = document.createRange();
+            const selection = window.getSelection();
+
+            range.selectNodeContents(el);
+            range.collapse(false);
+
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        });
+
+        await this.page.keyboard.press('Enter');
+
+        await this.page.waitForTimeout(200);
+
+        console.log('➡️ goToEndAndTypeNewLine: end');
+    }
+    private async selectAllInEditor(): Promise<void> {
+        await this.bodyEditor.click({ force: true });
+
+        await this.page.keyboard.down('Control');
+        await this.page.keyboard.press('A');
+        await this.page.keyboard.up('Control');
+
+        await this.page.waitForTimeout(200);
+    }
+    private async moveToNewParagraph(): Promise<void> {
+        await this.bodyEditor.click({ force: true });
+
+        await this.page.keyboard.press('Escape');
+
+        // Always force focus first
+        await this.bodyEditor.focus();
+
+        // Move using DOM selection (NOT Ctrl+End)
+        await this.bodyEditor.evaluate((el) => {
+            const range = document.createRange();
+            const sel = window.getSelection();
+
+            range.selectNodeContents(el);
+            range.collapse(false);
+
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+        });
+
+        await this.page.keyboard.press('Enter');
 
         await this.page.waitForTimeout(300);
     }
