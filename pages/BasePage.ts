@@ -1,7 +1,7 @@
 import { Page, expect, Locator } from '@playwright/test';
 
 export class BasePage {
-  constructor(protected page: Page) { }
+  constructor(protected readonly page: Page) { }
 
   async waitForPageLoad(): Promise<void> {
     await this.page.waitForLoadState('networkidle');
@@ -12,7 +12,7 @@ export class BasePage {
   }
 
   async getTitle(): Promise<string> {
-    return await this.page.title();
+    return this.page.title();
   }
 
   async verifyUrlContains(text: string): Promise<void> {

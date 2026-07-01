@@ -55,13 +55,13 @@ export class CustomWorld extends World {
   dashboardDigestAlertExpectedData: any;
 
   searchStoryInstantExpectedData!: AlertExpectedData;
-searchStoryDigestExpectedData!: AlertExpectedData;
+  searchStoryDigestExpectedData!: AlertExpectedData;
 
-savedSearchInstantExpectedData!: AlertExpectedData;
-savedSearchDigestExpectedData!: AlertExpectedData;
+  savedSearchInstantExpectedData!: AlertExpectedData;
+  savedSearchDigestExpectedData!: AlertExpectedData;
 
-savedSearchDashboardInstantExpectedData!: AlertExpectedData;
-savedSearchDashboardDigestExpectedData!: AlertExpectedData;
+  savedSearchDashboardInstantExpectedData!: AlertExpectedData;
+  savedSearchDashboardDigestExpectedData!: AlertExpectedData;
 
   // Alert information
   alertType: string = '';

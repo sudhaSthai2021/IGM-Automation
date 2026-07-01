@@ -652,4 +652,20 @@ export class SearchPage extends BasePage {
     private escapeRegExp(value: string): string {
         return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
+   
+
+async isBondPresent(bondName: string): Promise<boolean> {
+
+    await this.searchInput.fill(bondName);
+
+    await this.page.keyboard.press('Enter');
+
+    await this.page.waitForLoadState('networkidle');
+
+    return await this.page
+        .getByText(bondName)
+        .first()
+        .isVisible()
+        .catch(() => false);
+}
 }

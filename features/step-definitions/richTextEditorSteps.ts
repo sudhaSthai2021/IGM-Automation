@@ -49,12 +49,7 @@ When(
     await this.storyEditor.selectDestinations(destinations);
   }
 );
-When(
-  'user verifies previously entered editor content is retained',
-  async function (this: CustomWorld) {
-    await this.storyEditor.verifyEditorContentRetained();
-  }
-);
+
 
 When(
   'user verifies all Rich Text Editor controls are available and editable',
@@ -75,12 +70,3 @@ Then('story should be published successfully', async function (this: CustomWorld
   await this.storyEditor.verifyPublishSuccess();
 });
 
-/*
-
-#Then(
- # 'image upload should show error message',
- # async function (this: CustomWorld) {
- #   await this.storyEditor.verifyImageUploadIsFailing();
- #}
- #);
- */

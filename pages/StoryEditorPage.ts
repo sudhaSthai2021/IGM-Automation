@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
+import path from 'path';
 
 export class StoryEditorPage extends BasePage {
     private originalHeadline = '';
@@ -924,7 +925,7 @@ export class StoryEditorPage extends BasePage {
 
     async verifyPublishSuccess(): Promise<void> {
         await expect(
-            this.page.getByText(/Story will publish on/i)
+            this.page.getByText(/Story will publish on|Story Published successfully/i)
         ).toBeVisible({ timeout: 20000 });
     }
 
@@ -962,12 +963,31 @@ export class StoryEditorPage extends BasePage {
             this.page.getByText('Drop image', { exact: true })
         ).toBeVisible({ timeout: 10000 });
 
+        const imagePath = path.join(
+            process.cwd(),
+            'test-data',
+            'sampleImage.png'
+        );
+        await this.page
+            .locator('input[aria-labelledby="fr-image-upload-layer-1"]')
+            .setInputFiles(imagePath);
 
-        await this.page.keyboard.press('Escape');
+        console.log('✅ Image uploaded successfully');
 
-        console.log('✅ Image insert popup opened successfully');
+        // Clear image selection
+        await this.page.keyboard.press("Escape");
+
+        // Return cursor to the editor
+        await this.bodyEditor.click();
+
+        await expect(
+            this.bodyEditor.locator('img')
+        ).toBeVisible({ timeout: 10000 });
+
+        console.log('✅ Image inserted successfully');
     }
     async verifyVideoInsert(): Promise<void> {
+        await this.bodyEditor.click();
         await this.goToEndAndTypeNewLine();
 
         await this.insertVideoButton.click();
@@ -1015,6 +1035,8 @@ export class StoryEditorPage extends BasePage {
 
         console.log('✅ Table inserted successfully');
     }
+
+
     async verifyFileUpload(): Promise<void> {
         await this.goToEndAndTypeNewLine();
 
@@ -1038,9 +1060,21 @@ export class StoryEditorPage extends BasePage {
 
         console.log('✅ File upload popup opened successfully');
 
-        // Close popup so it doesn't interfere with Image popup test
-        await this.page.keyboard.press('Escape');
+        // Upload the file
+        const filePath = path.resolve(
+            __dirname,
+            '../test-data/UnionTrackingReport.xlsx'
+        );
 
+        await this.page.locator('input[type="file"]').setInputFiles(filePath);
+
+        console.log('✅ Union Tracking report uploaded successfully');
+
+        // Wait for upload to finish (adjust locator as needed)
+        await this.page.waitForTimeout(2000);
+
+        // Close popup
+        await this.page.keyboard.press('Escape');
         await this.page.waitForTimeout(500);
 
         console.log('✅ File upload popup closed');

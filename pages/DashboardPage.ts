@@ -83,6 +83,43 @@ export class DashboardPage extends BasePage {
 
     return destinations;
   }
+
+  async getFirstAvailableFeedDestinations(): Promise<{
+  feedName: string;
+  destinations: string[];
+}> {
+  await this.waitForPageLoad();
+
+  const widgets = this.page.locator('[data-testid*="dashboard-widget"]');
+  await expect(widgets.first()).toBeVisible({ timeout: 15000 });
+
+  const widgetCount = await widgets.count();
+  console.log(`Dashboard widgets found: ${widgetCount}`);
+
+  for (let i = 0; i < widgetCount; i++) {
+    const widget = widgets.nth(i);
+    const widgetText = await widget.innerText();
+
+    const feedName = widgetText
+      .split('\n')
+      .map(line => line.trim())
+      .find(Boolean);
+
+    if (!feedName) {
+      continue;
+    }
+
+    console.log(`Selected feed: ${feedName}`);
+
+    return {
+      feedName,
+      destinations: await this.getFeedDestinations(feedName)
+    };
+  }
+
+  throw new Error('No available feed found on dashboard.');
+}
+/*
   async getFirstAvailableFeedDestinations(): Promise<{
     feedName: string;
     destinations: string[];
@@ -125,6 +162,7 @@ export class DashboardPage extends BasePage {
 
     throw new Error('❌ No available feed found on dashboard');
   }
+    */
   async createAlert(
     feedName: string,
     alertType: string,

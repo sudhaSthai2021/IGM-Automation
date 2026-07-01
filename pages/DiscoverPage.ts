@@ -208,14 +208,108 @@ export class DiscoverPage extends BasePage {
         };
     }
 
+
+    /*
+    
+        async captureTileDestinationsFromAddToDashboardModal(): Promise<{
+            tileTitle: string;
+            destinations: string[];
+        }> {
+            const addToDashboardButton = this.page
+                .getByTestId('feed-widget-add-to-dashboard-button')
+                .first();
+    
+            const tile = addToDashboardButton.locator(
+                'xpath=ancestor::div[.//*[@data-testid="feed-widget-add-to-dashboard-button"]][1]'
+            );
+    
+            const tileText = await tile.innerText();
+    
+            console.log('===== TILE TEXT =====');
+            console.log(tileText);
+            console.log('=====================');
+    
+            const tileTitle = tileText
+                .split('\n')
+                .map(text => text.trim())
+                .find(text => text.startsWith('Story -')) || '';
+    
+            console.log('Captured tile title:', tileTitle);
+            console.log('✅ Selected Discover tile:', tileTitle);
+            await expect(addToDashboardButton).toBeVisible({ timeout: 30000 });
+            await addToDashboardButton.click();
+    
+            const modal = this.page.locator('[role="dialog"]').last();
+    
+            await expect(modal).toBeVisible({ timeout: 10000 });
+    
+            console.log('✅ Add To Dashboard modal opened');
+            console.log('✅ Selected Discover tile:', tileTitle);
+    
+            const destinations = await modal
+                .locator('.MuiChip-label')
+                .allInnerTexts();
+    
+            const cleanDestinations = destinations.map(destination =>
+                destination.trim().toUpperCase()
+            );
+    
+            console.log('✅ Tile destinations:', cleanDestinations);
+    
+            await modal.locator('button').first().click();
+    
+            await expect(modal).toBeHidden({ timeout: 15000 });
+    
+            console.log('✅ Add To Dashboard modal closed');
+    
+            return {
+                tileTitle,
+                destinations: cleanDestinations
+            };
+        }
+    
+        */
+
     async createAlertFromDiscoverTile(
         alertType: string,
         destinations: string[],
         tileTitle: string
     ) {
+
+        console.log('==============================');
+        console.log('Received tileTitle:', tileTitle);
+        console.log('Alert Type:', alertType);
+        console.log('Destinations:', destinations);
+        console.log('==============================');
+
         const tile = this.page
             .getByText(tileTitle, { exact: true })
             .locator('xpath=ancestor::div[.//*[@aria-label="Add Email Alert"]][1]');
+
+        const currentTitle = await tile
+            .getByTestId('feed-widget-title')
+            .locator('span')
+            .allInnerTexts();
+
+        const currentDestinations = await tile
+            .locator('.MuiChip-label')
+            .allInnerTexts();
+
+        console.log('Clicked tile destinations:', currentDestinations);
+
+        console.log('Clicked tile title:', currentTitle.join(' '));
+
+
+        console.log('==============================');
+        console.log('Searching for tile:', tileTitle);
+        console.log('Matching tiles:', await tile.count());
+
+        if (await tile.count() > 0) {
+            console.log('Tile text found:');
+            console.log(await tile.first().innerText());
+        }
+        console.log('==============================');
+
 
         const emailAlertButton = tile
             .getByLabel('Add Email Alert')
@@ -223,6 +317,14 @@ export class DiscoverPage extends BasePage {
 
         await expect(emailAlertButton).toBeVisible({ timeout: 30000 });
         await emailAlertButton.click();
+
+        const alertModal = this.page.locator('[role="dialog"]').last();
+
+        await expect(alertModal).toBeVisible({ timeout: 10000 });
+
+        console.log('========== ALERT MODAL ==========');
+        console.log(await alertModal.innerText());
+        console.log('=================================');
 
         await expect(
             this.page.getByText(/Add Alert|Create Alert/i)
